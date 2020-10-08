@@ -50,6 +50,7 @@ int state;
 
 Timer guardSpeed;
 Timer resetDelay;
+Timer establishing;
 
 
 void setup() 
@@ -58,6 +59,7 @@ void setup()
   location = false;
   explored = false;
   spotted = false;
+  establishing.set(100);
 }
 
 
@@ -66,7 +68,7 @@ void loop() {
 
   spotted = false; //Reset this most important variable
 
-  lockAnimLoop(currentColor, 250);    //loop red on every blink byt calling this function, defined at the end
+  lockAnimLoop(currentColor, 125);    //loop red on every blink byt calling this function, defined at the end
   
   if(resetDelay.isExpired()) //resetDelay is a timer which prevents recursion when resetting the board
   {
@@ -117,7 +119,8 @@ void loop() {
       {
         explored = true;
         location = true; //Move the player to this location
-        setValueSentOnAllFaces(4); //Flash a signal to neighbors in order to show that this is the new active location.
+        establishing.set(100);
+        state = 4;
       }
       else if(getLastValueReceivedOnFace(f) == 2 && spotted) //If you move to a threatened space
       {
@@ -158,10 +161,19 @@ void loop() {
   
   else if (location == true)
   {
+    if(state == 4 && !establishing.isExpired())
+    {
+       setValueSentOnAllFaces(4); //Flash a signal to neighbors in order to show that this is the new active location.
+    }
+    else
+    {
+          state = 2;
+    }
     currentColor = BLUE;
-    state = 2;
+
   }
 }
+
 
 
 void lockAnimLoop(Color currentColor, int interval) //This is what actually runs the loop
