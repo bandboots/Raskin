@@ -30,7 +30,7 @@ int state;
  * STATES
  * 0 - Unexplored
  * 1 - Explored
- * 2 - Location
+ * 2 - (Current)Location
  * 3 - Spotted
  * 4 - NewLocation
  * 5 - Dead
@@ -52,15 +52,22 @@ void setup() {
 
 void loop() {  
 
+  spotted = false; //Reset this most important variable
+
   lockAnimLoop(currentColor, 250);    //loop red on every blink byt calling this function, defined at the end
   
-  if(resetDelay.isExpired()) //resetDelay is a coollllllllllllllllll timer which prevents recursion when resetting the board
+  if(resetDelay.isExpired()) //resetDelay is a timer which prevents recursion when resetting the board
   {
     FOREACH_FACE(f)
     {
-      if(getLastValueReceivedOnFace(f) == 4 && location == true)  //If a blink signals that it is the new location 
+      if(getLastValueReceivedOnFace(f) == 3) //If a guard is looking this direction, you are at risk of being spotted
+      {
+        spotted = true;
+      }
+      if(getLastValueReceivedOnFace(f) == 4)  //If a blink signals that it is the new location 
       {
         location = false;                                         //tiles around it should check to see if location is true for them, and adjust accordingly
+        //NOTE: This is having some problems, possibly just communication issues due to dev kit. On rare occasions, a blink doesn't receive the New Location signal and will stay blue
       }
       if(getLastValueReceivedOnFace(f) == 6) //If the reset signal is received
       {
@@ -76,16 +83,11 @@ void loop() {
 
   
 
-  if (buttonPressed())
-  { //Check for location in neighbors, check if spotted
-    spotted = false; //Reset this most important variable
-     FOREACH_FACE (f) //Cycle through each face, check for position and spotted
+  if (buttonPressed())   //Check for location in neighbors, check if spotted
+  { 
+    FOREACH_FACE (f) //Cycle through each face, check for position and spotted
     {
-      if(getLastValueReceivedOnFace(f) == 3) //If a guard is looking this direction, you are spotted
-      {
-        spotted = true;
-      }
-      else if(getLastValueReceivedOnFace(f) == 2 && !spotted) //If any face is state 2 (location), this spot is available. If no guard is looking, this spot is safe.
+      if(getLastValueReceivedOnFace(f) == 2 && !spotted) //If any face is state 2 (location), this spot is available. If no guard is looking, this spot is safe.
       {
         explored = true;
         location = true; //Move the player to this location
@@ -109,7 +111,13 @@ void loop() {
   
 
   //Establish the base color - Yellow if unexplored, Green if explored, Blue if the current location
-  if (explored == false)
+  if(state==5)
+  {
+    currentColor = RED;
+    explored == false;
+    location == false;
+  }
+  if (explored == false && state != 5)
   {
     currentColor = YELLOW;
     state = 0;
@@ -125,12 +133,6 @@ void loop() {
   {
     currentColor = BLUE;
     state = 2;
-  }
-  if(state==5)
-  {
-    currentColor = RED;
-    explored == false;
-    location == false;
   }
 }
 
