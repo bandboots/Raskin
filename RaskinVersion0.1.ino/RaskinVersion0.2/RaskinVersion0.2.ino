@@ -10,6 +10,16 @@
 //Flash all blinks red and end game
 
 
+
+/*
+ * CURRENT ISSUES:
+ * Communication issue - when moving to a new tile, the old location may not receive the signal to turn green
+ * Game Over Issue - Green tiles don't seem to register guards. I haven't been able to turn a green tile red.
+ */
+
+
+
+
 /* ***********
  *  REFERENCES: 
  *  Example ColorByNeighbor
@@ -69,9 +79,18 @@ void loop() {
         location = false;                                         //tiles around it should check to see if location is true for them, and adjust accordingly
         //NOTE: This is having some problems, possibly just communication issues due to dev kit. On rare occasions, a blink doesn't receive the New Location signal and will stay blue
       }
+      if(getLastValueReceivedOnFace(f) == 5) //Spread Game Over condition to all tiles
+      {
+         setValueSentOnAllFaces(5); //send out the reset signal
+         state = 5;
+         location = false; //reset all variables
+         explored = false;
+         spotted = false;
+      }
       if(getLastValueReceivedOnFace(f) == 6) //If the reset signal is received
       {
          setValueSentOnAllFaces(6); //send out the reset signal
+         state = 0;
          location = false; //reset all variables
          explored = false;
          spotted = false;
@@ -110,7 +129,7 @@ void loop() {
   }
   
 
-  //Establish the base color - Yellow if unexplored, Green if explored, Blue if the current location
+  //Establish the base color - Yellow if unexplored, Green if explored, Blue if the current location, Red for Game Over
   if(state==5)
   {
     currentColor = RED;
