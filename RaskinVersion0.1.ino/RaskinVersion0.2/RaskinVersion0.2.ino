@@ -46,6 +46,7 @@ int state;
  * 4 - NewLocation
  * 5 - Dead
  * 6 - Reset
+ * 7 - BlueRed
  */
 
 Timer guardSpeed;
@@ -76,7 +77,7 @@ void loop() {
     {
       if(!isValueReceivedOnFaceExpired(f))
       {
-          if(getLastValueReceivedOnFace(f) == 3) //If a guard is looking this direction, you are at risk of being spotted
+          if(getLastValueReceivedOnFace(f) == 3 or getLastValueReceivedOnFace(f) == 7) //If a guard is looking this direction, you are at risk of being spotted
           {
             spotted = true;
           }
@@ -115,14 +116,14 @@ void loop() {
   { 
     FOREACH_FACE (f) //Cycle through each face, check for position and spotted
     {
-      if(getLastValueReceivedOnFace(f) == 2 && !spotted) //If any face is state 2 (location), this spot is available. If no guard is looking, this spot is safe.
+      if((getLastValueReceivedOnFace(f) == 2 or getLastValueReceivedOnFace(f) == 7)&& !spotted) //If any face is state 2 (location), this spot is available. If no guard is looking, this spot is safe.
       {
         explored = true;
         location = true; //Move the player to this location
         establishing.set(100);
         state = 4;
       }
-      else if(getLastValueReceivedOnFace(f) == 2 && spotted) //If you move to a threatened space
+      else if((getLastValueReceivedOnFace(f) == 2 or getLastValueReceivedOnFace(f) == 7)&& spotted) //If you move to a threatened space
       {
         state = 5; //Game Over
       }
@@ -184,8 +185,15 @@ void lockAnimLoop(Color currentColor, int interval) //This is what actually runs
       setValueSentOnAllFaces(state);  //Tell each face to send out the state of this blink
       faceIndex += 1;                 //move the face that will show the guard (red)
       if (faceIndex == 6) { faceIndex = 0;}
+      if (state != 2)
+      {
+        setValueSentOnFace(3, faceIndex);//set the value on this one face to be 'spotted'
+      }
+      else if (state == 2)
+      {
+        setValueSentOnFace(7, faceIndex);//set the value on this one face to be 'spotted'
+      }
       setColorOnFace(RED, faceIndex); //set the guard face to red
-      setValueSentOnFace(3, faceIndex);//set the value on this one face to be 'spotted'
       guardSpeed.set(interval);        //reset the timer so the guard will move again
     }
 }
