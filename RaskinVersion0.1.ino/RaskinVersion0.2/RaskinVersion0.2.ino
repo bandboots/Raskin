@@ -43,7 +43,7 @@ Color currentColor;
 int state;
 /*
  * STATES
- * 0 - Unexplored
+ * 10 - Unexplored
  * 1 - Explored
  * 2 - (Current)Location
  * 3 - Spotted
@@ -58,6 +58,7 @@ Timer guardSpeed;
 Timer resetDelay;
 Timer establishing;
 Timer WinCountdown;
+Timer EchoChecker;
 
 
 void setup() 
@@ -68,7 +69,7 @@ void setup()
   explored = false;
   spotted = false;
   establishing.set(100);
-  state = 0;
+  state = 10;
 }
 
 
@@ -82,18 +83,18 @@ void loop() {
 
   lockAnimLoop(currentColor, 125);    //loop red on every blink byt calling this function, defined at the end
   
-  if(resetDelay.isExpired() && state < 8) //resetDelay is a timer which prevents recursion when resetting the board
+  if(resetDelay.isExpired() ) //resetDelay is a timer which prevents recursion when resetting the board
   {
     FOREACH_FACE(f)
     {
       if(!isValueReceivedOnFaceExpired(f))
       {
-          if(getLastValueReceivedOnFace(f) == 0)
+          if(getLastValueReceivedOnFace(f) == 10 && EchoChecker.isExpired()) //This is the echo that determines if the player has won or not
           {
-            setValueSentOnAllFaces(0);
-            winning = false;
-            resetDelay.set(250);
-            WinCountdown.set(750);
+            setValueSentOnAllFaces(10); //If a 10 is received, echo a 10 for a moment before returning to your own state
+            winning = false; //If there is a 10 somewhere, we haven't won
+            EchoChecker.set(500); //set timers
+            WinCountdown.set(1750);
           }
           if(getLastValueReceivedOnFace(f) == 3 or getLastValueReceivedOnFace(f) == 7) //If a guard is looking this direction, you are at risk of being spotted
           {
@@ -111,6 +112,7 @@ void loop() {
              location = false; //reset all variables
              explored = false;
              spotted = false;
+             winning = false; //can't be winning if you lost
           }
           if(getLastValueReceivedOnFace(f) == 6) //If the reset signal is received
           {
@@ -120,12 +122,12 @@ void loop() {
              explored = false;
              spotted = false;
              resetDelay.set(1000); //set timer to prevent recursion
-             state = 0;
+             state = 10;
           }
       }
 
     }
-    if(winning && state < 8)
+    if(winning && state != 8) //This checks if there are any 10s, and is disabled if we're already celebrating
     {
 
       areYaWinningSon();
@@ -136,7 +138,7 @@ void loop() {
 
   
 
-  if (buttonPressed() && state < 8)   //Check for location in neighbors, check if spotted
+  if (buttonPressed() && state != 8)   //Check for location in neighbors, check if spotted
   { 
     FOREACH_FACE (f) //Cycle through each face, check for position and spotted
     {
@@ -165,7 +167,7 @@ void loop() {
   
 
   //Establish the base color - Yellow if unexplored, Green if explored, Blue if the current location, Red for Game Over
-  if(state == 8)
+  if(state == 8) //This is our celebration state. Flash yellow and white until reset
   {
     if(resetDelay.isExpired())
     {
@@ -184,26 +186,26 @@ void loop() {
     }
   }
   
-  if(state==5)
+  if(state==5) //YOU LOSE
   {
     currentColor = RED;
     explored == false;
     location == false;
   }
-  if (explored == false && state != 5)
+  if (explored == false && state != 5) //Unexplored. The hated 10s.
   {
     currentColor = YELLOW;
-    state = 0;
+    state = 10;
     resetting = false;
   } 
   
-  else if (explored == true && location == false)
+  else if (explored == true && location == false) //Explored
   {
     currentColor = GREEN;
     state = 1;
   } 
   
-  else if (location == true)
+  else if (location == true) //YOU ARE HERE
   {
     if(state == 4 && !establishing.isExpired())
     {
@@ -219,7 +221,7 @@ void loop() {
 }
 
 
-void areYaWinningSon()
+void areYaWinningSon() //Wait until the countdown finishes. If no 10s remain after 1750ms, switch to the celebration state
 {
 
   if(WinCountdown.isExpired())
