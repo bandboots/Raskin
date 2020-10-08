@@ -70,32 +70,36 @@ void loop() {
   {
     FOREACH_FACE(f)
     {
-      if(getLastValueReceivedOnFace(f) == 3) //If a guard is looking this direction, you are at risk of being spotted
+      if(!isValueReceivedOnFaceExpired(f))
       {
-        spotted = true;
+          if(getLastValueReceivedOnFace(f) == 3) //If a guard is looking this direction, you are at risk of being spotted
+          {
+            spotted = true;
+          }
+          if(getLastValueReceivedOnFace(f) == 4)  //If a blink signals that it is the new location 
+          {
+            location = false;                                         //tiles around it should check to see if location is true for them, and adjust accordingly
+            //NOTE: This is having some problems, possibly just communication issues due to dev kit. On rare occasions, a blink doesn't receive the New Location signal and will stay blue
+          }
+          if(getLastValueReceivedOnFace(f) == 5) //Spread Game Over condition to all tiles
+          {
+             setValueSentOnAllFaces(5); //send out the reset signal
+             state = 5;
+             location = false; //reset all variables
+             explored = false;
+             spotted = false;
+          }
+          if(getLastValueReceivedOnFace(f) == 6) //If the reset signal is received
+          {
+             setValueSentOnAllFaces(6); //send out the reset signal
+             state = 0;
+             location = false; //reset all variables
+             explored = false;
+             spotted = false;
+             resetDelay.set(1000); //set timer to prevent recursion
+          }
       }
-      if(getLastValueReceivedOnFace(f) == 4)  //If a blink signals that it is the new location 
-      {
-        location = false;                                         //tiles around it should check to see if location is true for them, and adjust accordingly
-        //NOTE: This is having some problems, possibly just communication issues due to dev kit. On rare occasions, a blink doesn't receive the New Location signal and will stay blue
-      }
-      if(getLastValueReceivedOnFace(f) == 5) //Spread Game Over condition to all tiles
-      {
-         setValueSentOnAllFaces(5); //send out the reset signal
-         state = 5;
-         location = false; //reset all variables
-         explored = false;
-         spotted = false;
-      }
-      if(getLastValueReceivedOnFace(f) == 6) //If the reset signal is received
-      {
-         setValueSentOnAllFaces(6); //send out the reset signal
-         state = 0;
-         location = false; //reset all variables
-         explored = false;
-         spotted = false;
-         resetDelay.set(1000); //set timer to prevent recursion
-      }
+
     }
   }
 
