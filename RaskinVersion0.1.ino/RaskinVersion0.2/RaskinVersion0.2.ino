@@ -9,6 +9,8 @@
 //ELSE IF this blink is spotted when pressed
 //Flash all blinks red and end game
 
+//Win condition: Each blink echoes a 0 as a single pulse if they are next to a 0 state or receive a 0, then wait 250ms. If any blink does not get a 0 pulse, it begins a countdown timer of 750ms which resets if a 0 pulse arrives. If it reaches 0, win.
+
 
 
 /*
@@ -33,6 +35,8 @@ bool location;
 bool explored;
 bool spotted;
 bool resetting;
+bool winning;
+bool isYellow;
 byte faceIndex = 0;
 byte faceStartIndex = 0;
 Color currentColor;
@@ -47,36 +51,50 @@ int state;
  * 5 - Dead
  * 6 - Reset
  * 7 - BlueRed
+ * 8 - Win Condition
  */
 
 Timer guardSpeed;
 Timer resetDelay;
 Timer establishing;
+Timer WinCountdown;
 
 
 void setup() 
 {  
+  winning = true;
   resetting = false;
   location = false;
   explored = false;
   spotted = false;
   establishing.set(100);
+  state = 0;
 }
 
 
 
 void loop() {  
 
+  winning = true; //this has to be reset because it will switch to false every loop that there is a 0-state
+
   spotted = false; //Reset this most important variable
+
 
   lockAnimLoop(currentColor, 125);    //loop red on every blink byt calling this function, defined at the end
   
-  if(resetDelay.isExpired()) //resetDelay is a timer which prevents recursion when resetting the board
+  if(resetDelay.isExpired() && state < 8) //resetDelay is a timer which prevents recursion when resetting the board
   {
     FOREACH_FACE(f)
     {
       if(!isValueReceivedOnFaceExpired(f))
       {
+          if(getLastValueReceivedOnFace(f) == 0)
+          {
+            setValueSentOnAllFaces(0);
+            winning = false;
+            resetDelay.set(250);
+            WinCountdown.set(750);
+          }
           if(getLastValueReceivedOnFace(f) == 3 or getLastValueReceivedOnFace(f) == 7) //If a guard is looking this direction, you are at risk of being spotted
           {
             spotted = true;
@@ -107,12 +125,18 @@ void loop() {
       }
 
     }
+    if(winning && state < 8)
+    {
+
+      areYaWinningSon();
+      
+    }
   }
 
 
   
 
-  if (buttonPressed())   //Check for location in neighbors, check if spotted
+  if (buttonPressed() && state < 8)   //Check for location in neighbors, check if spotted
   { 
     FOREACH_FACE (f) //Cycle through each face, check for position and spotted
     {
@@ -141,6 +165,25 @@ void loop() {
   
 
   //Establish the base color - Yellow if unexplored, Green if explored, Blue if the current location, Red for Game Over
+  if(state == 8)
+  {
+    if(resetDelay.isExpired())
+    {
+      if(isYellow)
+      {
+        currentColor = WHITE;
+      }
+      else if (!isYellow)
+      {
+        currentColor = YELLOW;
+      }
+
+      setColor(currentColor);
+
+      resetDelay.set(500);
+    }
+  }
+  
   if(state==5)
   {
     currentColor = RED;
@@ -173,6 +216,19 @@ void loop() {
     currentColor = BLUE;
 
   }
+}
+
+
+void areYaWinningSon()
+{
+
+  if(WinCountdown.isExpired())
+  {
+    isYellow = true;
+    currentColor = YELLOW;
+    state = 8;
+  }
+  
 }
 
 
