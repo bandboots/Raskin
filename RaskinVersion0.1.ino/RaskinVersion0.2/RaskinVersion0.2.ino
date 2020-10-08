@@ -32,6 +32,7 @@
 bool location;
 bool explored;
 bool spotted;
+bool resetting;
 byte faceIndex = 0;
 byte faceStartIndex = 0;
 Color currentColor;
@@ -51,8 +52,9 @@ Timer guardSpeed;
 Timer resetDelay;
 
 
-void setup() {  
-
+void setup() 
+{  
+  resetting = false;
   location = false;
   explored = false;
   spotted = false;
@@ -81,9 +83,9 @@ void loop() {
             location = false;                                         //tiles around it should check to see if location is true for them, and adjust accordingly
             //NOTE: This is having some problems, possibly just communication issues due to dev kit. On rare occasions, a blink doesn't receive the New Location signal and will stay blue
           }
-          if(getLastValueReceivedOnFace(f) == 5) //Spread Game Over condition to all tiles
+          if(getLastValueReceivedOnFace(f) == 5 && !resetting) //Spread Game Over condition to all tiles
           {
-             setValueSentOnAllFaces(5); //send out the reset signal
+             setValueSentOnAllFaces(5); //send out the Game Over signal
              state = 5;
              location = false; //reset all variables
              explored = false;
@@ -91,12 +93,13 @@ void loop() {
           }
           if(getLastValueReceivedOnFace(f) == 6) //If the reset signal is received
           {
+             resetting = true;
              setValueSentOnAllFaces(6); //send out the reset signal
-             state = 0;
              location = false; //reset all variables
              explored = false;
              spotted = false;
              resetDelay.set(1000); //set timer to prevent recursion
+             state = 0;
           }
       }
 
@@ -144,6 +147,7 @@ void loop() {
   {
     currentColor = YELLOW;
     state = 0;
+    resetting = false;
   } 
   
   else if (explored == true && location == false)
