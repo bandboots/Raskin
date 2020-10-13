@@ -30,13 +30,16 @@
  *  Causeway
  * ***********/
 
-
+byte difficulty[] = { 225, 175, 125, 75 };
+Color dColor[] = {BLUE, GREEN, YELLOW, RED};
+byte dLevel = 0;
 bool location;
 bool explored;
 bool spotted;
 bool resetting;
 bool winning;
 bool isYellow;
+bool dChanging;
 byte faceIndex = 0;
 byte faceStartIndex = 0;
 Color currentColor;
@@ -52,6 +55,7 @@ int state;
  * 6 - Reset
  * 7 - BlueRed
  * 8 - Win Condition
+ * 9 - Increment Speed
  */
 
 Timer guardSpeed;
@@ -69,6 +73,7 @@ void setup()
   location = false;
   explored = false;
   spotted = false;
+
   establishing.set(100);
   state = 10;
 }
@@ -81,15 +86,29 @@ void loop() {
 
   spotted = false; //Reset this most important variable
 
-
-  lockAnimLoop(currentColor, 125);    //loop red on every blink byt calling this function, defined at the end
+  lockAnimLoop(currentColor, difficulty[dLevel]);    //loop red on every blink byt calling this function, defined at the end
+  
   
   if(resetDelay.isExpired() ) //resetDelay is a timer which prevents recursion when resetting the board
   {
+
     FOREACH_FACE(f)
     {
       if(!isValueReceivedOnFaceExpired(f))
       {
+          if(getLastValueReceivedOnFace(f) == 9)
+          {
+
+            setValueSentOnAllFaces(9);
+            dLevel +=1;
+            if(dLevel > 3)
+            {
+              dLevel = 0;
+            }
+            setColor(dColor[dLevel]);
+            resetDelay.set(1000);
+            dChanging = true;
+          }
           if(getLastValueReceivedOnFace(f) == 10 && EchoChecker.isExpired()) //This is the echo that determines if the player has won or not
           {
             setValueSentOnAllFaces(10); //If a 10 is received, echo a 10 for a moment before returning to your own state
@@ -165,7 +184,21 @@ void loop() {
     spotted = false;
     resetDelay.set(1000); //Set delay to prevent recursion
   }
+
+    if (buttonLongPressed()) //This will signal the blinks to reset themselves and each other, and make this blink the new starting point
+  {
+    setColor(BLUE);
+    dLevel +=1;
+    if(dLevel > 3)
+    {
+      dLevel = 0;
+    }
+    setValueSentOnAllFaces(9); //Send out the reset signal
+    resetDelay.set(1000); //Set delay to prevent recursion
+    dChanging = true;
+  }
   
+
 
   //Establish the base color - Yellow if unexplored, Green if explored, Blue if the current location, Red for Game Over
   if(state == 8) //This is our celebration state. Flash yellow and white until reset
@@ -218,6 +251,17 @@ void loop() {
     }
     currentColor = BLUE;
 
+  }
+  if(dChanging)
+  {
+    if(resetDelay.getRemaining() >=750)
+    {
+      setValueSentOnAllFaces(9);
+    }
+    else
+    {
+      dChanging = false;
+    }
   }
 }
 
