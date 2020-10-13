@@ -59,6 +59,7 @@ Timer resetDelay;
 Timer establishing;
 Timer WinCountdown;
 Timer EchoChecker;
+Timer Celebration;
 
 
 void setup() 
@@ -169,7 +170,7 @@ void loop() {
   //Establish the base color - Yellow if unexplored, Green if explored, Blue if the current location, Red for Game Over
   if(state == 8) //This is our celebration state. Flash yellow and white until reset
   {
-    if(resetDelay.isExpired())
+    if(Celebration.isExpired())
     {
       if(isYellow)
       {
@@ -182,7 +183,7 @@ void loop() {
 
       setColor(currentColor);
 
-      resetDelay.set(500);
+      Celebration.set(500);
     }
   }
   
@@ -224,7 +225,7 @@ void loop() {
 void areYaWinningSon() //Wait until the countdown finishes. If no 10s remain after 1750ms, switch to the celebration state
 {
 
-  if(WinCountdown.isExpired())
+  if(WinCountdown.isExpired() && state != 10)
   {
     isYellow = true;
     currentColor = YELLOW;
