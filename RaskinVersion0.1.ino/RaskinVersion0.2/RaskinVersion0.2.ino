@@ -252,7 +252,7 @@ void loop() {
     currentColor = BLUE;
 
   }
-  if(dChanging)
+  /*if(dChanging)
   {
     if(resetDelay.getRemaining() >=750)
     {
@@ -262,7 +262,7 @@ void loop() {
     {
       dChanging = false;
     }
-  }
+  }*/
 }
 
 
