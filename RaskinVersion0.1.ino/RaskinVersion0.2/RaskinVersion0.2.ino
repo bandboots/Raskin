@@ -30,9 +30,9 @@
  *  Causeway
  * ***********/
 
-byte difficulty[] = { 225, 175, 125, 75 };
-Color dColor[] = {BLUE, GREEN, YELLOW, RED};
-byte dLevel = 0;
+//byte difficulty[] = { 225, 175, 125, 95 };
+//Color dColor[] = {BLUE, GREEN, ORANGE, RED};
+//byte dLevel = 0;
 bool location;
 bool explored;
 bool spotted;
@@ -86,7 +86,7 @@ void loop() {
 
   spotted = false; //Reset this most important variable
 
-  lockAnimLoop(currentColor, difficulty[dLevel]);    //loop red on every blink byt calling this function, defined at the end
+  lockAnimLoop(currentColor, 150);//difficulty[dLevel]);    //loop red on every blink byt calling this function, defined at the end
   
   
   if(resetDelay.isExpired() ) //resetDelay is a timer which prevents recursion when resetting the board
@@ -96,7 +96,7 @@ void loop() {
     {
       if(!isValueReceivedOnFaceExpired(f))
       {
-          if(getLastValueReceivedOnFace(f) == 9)
+          /*if(getLastValueReceivedOnFace(f) == 9)
           {
 
             setValueSentOnAllFaces(9);
@@ -108,7 +108,7 @@ void loop() {
             setColor(dColor[dLevel]);
             resetDelay.set(1000);
             dChanging = true;
-          }
+          } */
           if(getLastValueReceivedOnFace(f) == 10 && EchoChecker.isExpired()) //This is the echo that determines if the player has won or not
           {
             setValueSentOnAllFaces(10); //If a 10 is received, echo a 10 for a moment before returning to your own state
@@ -185,7 +185,7 @@ void loop() {
     resetDelay.set(1000); //Set delay to prevent recursion
   }
 
-    if (buttonLongPressed()) //This will signal the blinks to reset themselves and each other, and make this blink the new starting point
+/*    if (buttonLongPressed()) //This will signal the blinks to reset themselves and each other, and make this blink the new starting point
   {
     setColor(BLUE);
     dLevel +=1;
@@ -197,7 +197,7 @@ void loop() {
     resetDelay.set(1000); //Set delay to prevent recursion
     dChanging = true;
   }
-  
+ */ 
 
 
   //Establish the base color - Yellow if unexplored, Green if explored, Blue if the current location, Red for Game Over

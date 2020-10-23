@@ -1,8 +1,16 @@
 
+/*
+ * DONE:
+ * -Button Press for difficulty
+ * -Basic guard loop
+ * 
+ * TO DO:
+
+
 int gameState = 0;
-byte difficulty[] = { 225, 175, 125, 75 };
-Color dColor[] = {BLUE, GREEN, YELLOW, RED};
-byte dLevel = 0;
+//byte difficulty[] = { 225, 175, 125, 95 };
+//Color dColor[] = {BLUE, GREEN, ORANGE, RED};
+//byte dLevel = 0;
 bool location;
 bool explored;
 bool spotted;
@@ -288,7 +296,7 @@ void loop() {
     }
 }
 
-
+*/
 
 
 
